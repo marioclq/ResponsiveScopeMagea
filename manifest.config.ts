@@ -23,6 +23,6 @@ export default defineManifest({
     },
   ],
   web_accessible_resources: [
-    { resources: ['src/simulator/index.html'], matches: ['<all_urls>'] },
+    { resources: ['src/simulator/index.html', 'src/offscreen/offscreen.html'], matches: ['<all_urls>'] },
   ],
 });

@@ -128,6 +128,7 @@ chrome.runtime.onMessage.addListener((msg: Msg, sender, sendResponse) => {
         break;
       case 'recorder-error':
         console.error('Recorder error:', msg.message);
+        sendResponse({ ok: true });
         break;
     }
   })();
