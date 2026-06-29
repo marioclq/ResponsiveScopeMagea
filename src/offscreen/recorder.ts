@@ -17,13 +17,24 @@ async function start(streamId: string) {
       },
     });
     chunks = [];
-    recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+    try {
+      recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+    } catch (e) {
+      stream.getTracks().forEach((t) => t.stop());
+      void chrome.runtime.sendMessage({ type: 'recorder-error', message: String(e) });
+      return;
+    }
     recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
     recorder.onstop = async () => {
-      const blob = new Blob(chunks, { type: 'video/webm' });
-      const dataUrl = await blobToDataUrl(blob);
-      void chrome.runtime.sendMessage({ type: 'recorder-data', dataUrl });
-      stream?.getTracks().forEach((t) => t.stop());
+      try {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const dataUrl = await blobToDataUrl(blob);
+        void chrome.runtime.sendMessage({ type: 'recorder-data', dataUrl });
+      } catch (e) {
+        void chrome.runtime.sendMessage({ type: 'recorder-error', message: String(e) });
+      } finally {
+        stream?.getTracks().forEach((t) => t.stop());
+      }
     };
     recorder.start();
   } catch (e) {

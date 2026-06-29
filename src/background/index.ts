@@ -98,13 +98,18 @@ chrome.runtime.onMessage.addListener((msg: Msg, sender, sendResponse) => {
           } catch (e) {
             sendResponse({ ok: false, error: String(e) });
           }
+        } else {
+          sendResponse({ ok: false, error: 'No tabId' });
         }
         break;
       case 'record-start': {
         await ensureOffscreen();
-        const streamId = await new Promise<string>((resolve) =>
-          chrome.tabCapture.getMediaStreamId({ targetTabId: msg.tabId }, resolve),
-        );
+        const streamId = await new Promise<string>((resolve, reject) => {
+          chrome.tabCapture.getMediaStreamId({ targetTabId: msg.tabId }, (id) => {
+            if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
+            else resolve(id);
+          });
+        });
         void chrome.runtime.sendMessage({ type: 'offscreen-start', streamId });
         sendResponse({ ok: true });
         break;
@@ -119,6 +124,7 @@ chrome.runtime.onMessage.addListener((msg: Msg, sender, sendResponse) => {
           filename: `responsivescope/recording-${Date.now()}.webm`,
         });
         await chrome.offscreen.closeDocument().catch(() => {});
+        sendResponse({ ok: true });
         break;
       case 'recorder-error':
         console.error('Recorder error:', msg.message);
