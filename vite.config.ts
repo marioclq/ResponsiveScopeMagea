@@ -5,5 +5,13 @@ import manifest from './manifest.config';
 
 export default defineConfig({
   plugins: [react(), crx({ manifest })],
+  build: {
+    rollupOptions: {
+      input: {
+        simulator: 'src/simulator/index.html',
+        offscreen: 'src/offscreen/offscreen.html',
+      },
+    },
+  },
   server: { port: 5173, strictPort: true, hmr: { port: 5173 } },
 });
